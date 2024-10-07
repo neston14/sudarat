@@ -1,20 +1,128 @@
 <?php
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
     include("head.php");
     include("configure.php");
     
     
-    $input_year = isset($_GET['bill_year']) ? $_GET['bill_year'] : convertToEngYear(date("Y"));
-    $input_month = isset($_GET['bill_month']) ? $_GET['bill_month'] : convertTo2Digit(date("m"));
+    $bill_year = isset($_POST['bill_year']) ? $_POST['bill_year'] : convertToEngYear(date("Y"));
+    $bill_month = isset($_POST['bill_month']) ? $_POST['bill_month'] : convertTo2Digit(date("m"));
     $action = isset($_GET['action']) ? $_GET['action'] : "create";
     
+    
     if($action=="add"){
- 
-        $bill_year = isset($_GET['bill_year']) ? $_GET['bill_year'] : convertToEngYear(date("Y"));
-        $bill_month = isset($_GET['bill_month']) ? $_GET['bill_month'] : convertTo2Digit(date("m"));
+        
+        $room_no = isset($_POST['room_no']) ? $_POST['room_no'] : "";
+        $wmeter_before = isset($_POST['wmeter_before']) ? $_POST['wmeter_before'] : "";
+        $wmeter_current = isset($_POST['wmeter_current']) ? $_POST['wmeter_current'] : "";
+        $water_unit = isset($_POST['water_unit']) ? $_POST['water_unit'] : "";
+        $water_unitprice = isset($_POST['water_unitprice']) ? $_POST['water_unitprice'] : "";
+        $water_cost = isset($_POST['water_cost']) ? $_POST['water_cost'] : "";
+        
+        $emeter_before = isset($_POST['emeter_before']) ? $_POST['emeter_before'] : "";
+        $emeter_current = isset($_POST['emeter_current']) ? $_POST['emeter_current'] : "";
+        $electric_unit = isset($_POST['electric_unit']) ? $_POST['electric_unit'] : "";
+        $electric_unitprice = isset($_POST['electric_unitprice']) ? $_POST['electric_unitprice'] : "";
+        $electric_cost = isset($_POST['electric_cost']) ? $_POST['electric_cost'] : "";
+        
+        
+        $room_cost = isset($_POST['room_cost']) ? $_POST['room_cost'] : "";
+        $other_cost = isset($_POST['other_cost']) ? $_POST['other_cost'] : 0;
+        $total = isset($_POST['total']) ? $_POST['total'] : "";
+       
+        $bill_date=convertToEngYear(date("Y")).date("-m-d");
+        
+        $check_bill_table_sql="SELECT * FROM bill_table where ROOM_NO = '$room_no' and BILL_MONTH = '$bill_month' and BILL_YEAR = '$bill_year'";
+        $check_bill_expense_sql="SELECT * FROM bill_expense where ROOM_NO = '$room_no' and BILL_MONTH = '$bill_month' and BILL_YEAR = '$bill_year'";
+
+        $insert_bill_table_sql=<<<EOF
+        INSERT INTO bill_table
+        (`room_no`,`bill_year`,`bill_month`,`bill_date`,`old_water`,`new_water`,`water_price`,`old_electric`,`new_electric`,`electric_price`,`other_price`,`room_price`)
+        VALUES('$room_no','$bill_year','$bill_month','$bill_date',$wmeter_before,$wmeter_current,$water_cost,$emeter_before,$emeter_current,$electric_cost,$other_cost,$room_cost);
+        EOF;
+        $insert_water_sql=<<<EOF
+        INSERT INTO bill_expense
+        (`room_no`,`expense_id`,`bill_year`,`bill_month`,`bill_date`,`old_unit`,`new_unit`)
+        VALUES('$room_no','0201','$bill_year','$bill_month','$bill_date',$wmeter_before,$wmeter_current);
+        EOF;
+        $insert_electric_sql=<<<EOF
+        INSERT INTO bill_expense
+        (`room_no`,`expense_id`,`bill_year`,`bill_month`,`bill_date`,`old_unit`,`new_unit`)
+        VALUES('$room_no','0301','$bill_year','$bill_month','$bill_date',$emeter_before,$emeter_current);
+        EOF;
+        
+        $update_bill_table_sql=<<<EOF
+        UPDATE bill_table
+        SET
+        `old_water` = $wmeter_before,
+        `new_water` = $wmeter_current,
+        `water_price` = $water_cost,
+        `old_electric` = $wmeter_current,
+        `new_electric` = $emeter_current,
+        `electric_price` = $electric_cost,
+        `other_price` = $other_cost,
+        `room_price` = $room_cost
+        WHERE `room_no` = '$room_no' AND `bill_month` = '$bill_month' AND `bill_year` = '$bill_year';
+        EOF;
+        $update_water_sql=<<<EOF
+        UPDATE billing_expense
+        SET
+        `old_unit` = $wmeter_before,
+        `new_unit` = $wmeter_current
+        WHERE `room_no` = '$room_no' AND `expense_id` = '0201' AND `bill_month` = '$bill_month' AND `bill_year` = '$bill_year';
+        EOF;
+        $update_electric_sql=<<<EOF
+        UPDATE billing_expense
+        SET
+        `old_unit` = $emeter_before,
+        `new_unit` = $emeter_current
+        WHERE `room_no` = '$room_no' AND `expense_id` = '0301' AND `bill_month` = '$bill_month' AND `bill_year` = '$bill_year';
+        EOF;
+        
+        
+        
+        
+        
+        
+        
+        
+        $conn = new mysqli($servername, $username, $password, $dbname);
+        if ($conn->connect_error) {
+            die("Connection failed: " . $conn->connect_error);
+        }
+        
+        
+        $stmt = $conn->prepare($check_bill_table_sql);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $existing_bill_table = true;
+        } else {
+            $existing_bill_table = false;
+        }
+        
+
         
         echo "<br><div class='center'>";
-        echo "Bill processing for room no for month $bill_month $bill_year";
+        echo "Bill processing room no. $room_no for month $bill_month $bill_year";
         echo "<br>x records is inserted to database";
+        if($existing_bill_table){
+        
+            
+            echo "<br>Record found<br>$update_bill_table_sql";
+            echo "<br>$update_water_sql";
+            echo "<br>$update_electric_sql";
+            echo "<br>$total";
+        }else{
+            
+            
+            echo "<br>Record not found<br>$insert_bill_table_sql";
+            echo "<br>$insert_water_sql";
+            echo "<br>$insert_electric_sql";
+            echo "<br>$total";
+        }
         echo "</div><br>";
         
     }
@@ -29,7 +137,7 @@
                   	<SELECT class="custom-select" id="bill_month" NAME="bill_month">
                     <?php
                     		for($i=1;$i<=12;$i++){
-                    			if($i==$input_month){
+                    			if($i==$bill_month){
                     				echo "<OPTION VALUE='".convertTo2Digit($i)."' SELECTED>".monthToText(convertTo2Digit($i));
                     				//$rep_month=convertTo2Digit($i);
                     			}else{
@@ -44,11 +152,11 @@
                     <?php
                     		$currentYear=convertToThaiYear(date('Y'));
                     		for($i=$currentYear;$i>=$currentYear-5;$i--){
-                    			if($i==convertToThaiYear($input_year)){
-                    				echo "<OPTION VALUE='".$i."' SELECTED>".$i;
+                    			if($i==convertToThaiYear($bill_year)){
+                    			    echo "<OPTION VALUE='".convertToEngYear($i)."' SELECTED>".$i;
                     				//$rep_year=$i;
                     			}else{
-                    				echo "<OPTION VALUE='".$i."'>".$i;
+                    			    echo "<OPTION VALUE='".convertToEngYear($i)."'>".$i;
                     			}
                     		}
                     ?>
@@ -78,25 +186,25 @@
             <tbody>
                 <tr>
                     <td>ค่าน้ำ</td>
-                    <td class="textbox_center"><input type="number" id="wmeter_before" name="wmeter_before" disabled readonly></td>
+                    <td class="textbox_center"><input type="number" id="wmeter_before" name="wmeter_before" readonly tabindex="-1"></td>
                     <td class="textbox_center"><input type="number" id="wmeter_current" name="wmeter_current" oninput="calculateWaterCost()" required></td>
-                    <td class="textbox_center"><input type="text" id="water_unit" size="10" name="water_unit" disabled readonly></td>
-                    <td class="textbox_center"><input type="number" id="water_unitprice" size="10" name="water_unitprice" disabled readonly value="<?php echo getExpenseRate("0201");?>"></td>
-                    <td class="textbox_center"><input type="text" id="water_cost" size="10" name="water_cost" disabled readonly></td>
+                    <td class="textbox_center"><input type="text" id="water_unit" size="10" name="water_unit" tabindex="-1" readonly></td>
+                    <td class="textbox_center"><input type="number" id="water_unitprice" size="10" name="water_unitprice" tabindex="-1" readonly value="<?php echo getExpenseRate("0201");?>"></td>
+                    <td class="textbox_center"><input type="text" id="water_cost" size="10" name="water_cost" tabindex="-1" readonly></td>
                 </tr>
                 <tr>            
                     <td>ค่าไฟ</td>        
-                	<td class="textbox_center"><input type="number" id="emeter_before" name="emeter_before" disabled readonly></td>
+                	<td class="textbox_center"><input type="number" id="emeter_before" name="emeter_before" tabindex="-1" readonly></td>
                     <td class="textbox_center"><input type="number" id="emeter_current" name="emeter_current" oninput="calculateElectricCost()" required></td>
-                    <td class="textbox_center"><input type="text" id="electric_unit" size="10" name="electric_unit" disabled readonly></td>
-                    <td class="textbox_center"><input type="number" id="electric_unitprice" size="10" name="electric_unitprice" disabled readonly value="<?php echo getExpenseRate("0301");?>"></td>
-                    <td class="textbox_center"><input type="text" id="electric_cost" size="10" name="electric_cost" disabled readonly></td>
+                    <td class="textbox_center"><input type="text" id="electric_unit" size="10" name="electric_unit" tabindex="-1" readonly></td>
+                    <td class="textbox_center"><input type="number" id="electric_unitprice" size="10" name="electric_unitprice" tabindex="-1" readonly value="<?php echo getExpenseRate("0301");?>"></td>
+                    <td class="textbox_center"><input type="text" id="electric_cost" size="10" name="electric_cost" tabindex="-1" readonly></td>
 
                 </tr>
                 <tr>
                     <td>ค่าเช่าห้อง</td>
                     <td colspan="4" align="right">&nbsp;</td>
-                    <td class="textbox_center"><input type="text" id="room_cost" size="10" name="room_cost" disabled readonly value=""></td>
+                    <td class="textbox_center"><input type="text" id="room_cost" size="10" name="room_cost" tabindex="-1" readonly value=""></td>
                 </tr>
                 <tr>
                     <td> <input type="checkbox" id="enabledOtherCost" onclick="toggleTextBox()">ค่าโทรศัพท์ และ อื่นๆ</td>
@@ -107,7 +215,7 @@
                 </tr>
                 <tr>
                     <td colspan="5" align="right">รวมค่าเช่า</td>
-                    <td class="textbox_center"><input type="text" id="total" size="10" name="total" disabled readonly></td>
+                    <td class="textbox_center"><input type="text" id="total" size="10" name="total" tabindex="-1" readonly></td>
                 </tr>                
                 <tr>
                     <td colspan="5" align="right">&nbsp;</td>

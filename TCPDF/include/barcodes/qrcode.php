@@ -262,7 +262,7 @@ if (!defined('QRCODEDEFS')) {
  * @author Nicola Asuni
  * @version 1.0.010
  */
-class QRcode {
+class qrcode {
 
 	/**
 	 * Barcode array to be returned which is readable by TCPDF.

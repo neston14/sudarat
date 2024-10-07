@@ -1,9 +1,13 @@
 <?php
-require_once('tcpdf/tcpdf.php');
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+require_once('./tcpdf/tcpdf.php');
 include("configure.php");
 
-$bill_year = isset($_GET['bill_year']) ? $_GET['bill_year'] : "2024";
-$bill_month = isset($_GET['bill_month']) ? $_GET['bill_month'] : "09";
+$bill_year = isset($_POST['bill_year']) ? $_POST['bill_year'] : "2024";
+$bill_month = isset($_POST['bill_month']) ? $_POST['bill_month'] : "09";
 
 
 $pdf = new TCPDF("L", PDF_UNIT, 'A5', true, 'UTF-8', false);

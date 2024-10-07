@@ -138,7 +138,7 @@
     <div class="topnav">
       <a class="active" href="main.php">Home</a>
       <a href="createbill.php">Submit Invoice</a>
-      <a href="print.php">Print Invoice</a>
+      <a href="showbill.php">Print Invoice</a>
       <a href="#about">Expense</a>
     </div>
     <br><br>
