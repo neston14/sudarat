@@ -17,14 +17,14 @@
         $room_no = isset($_POST['room_no']) ? $_POST['room_no'] : "";
         $wmeter_before = isset($_POST['wmeter_before']) ? $_POST['wmeter_before'] : "";
         $wmeter_current = isset($_POST['wmeter_current']) ? $_POST['wmeter_current'] : "";
-        $water_unit = isset($_POST['water_unit']) ? $_POST['water_unit'] : "";
-        $water_unitprice = isset($_POST['water_unitprice']) ? $_POST['water_unitprice'] : "";
+//        $water_unit = isset($_POST['water_unit']) ? $_POST['water_unit'] : "";
+//        $water_unitprice = isset($_POST['water_unitprice']) ? $_POST['water_unitprice'] : "";
         $water_cost = isset($_POST['water_cost']) ? $_POST['water_cost'] : "";
         
         $emeter_before = isset($_POST['emeter_before']) ? $_POST['emeter_before'] : "";
         $emeter_current = isset($_POST['emeter_current']) ? $_POST['emeter_current'] : "";
-        $electric_unit = isset($_POST['electric_unit']) ? $_POST['electric_unit'] : "";
-        $electric_unitprice = isset($_POST['electric_unitprice']) ? $_POST['electric_unitprice'] : "";
+//        $electric_unit = isset($_POST['electric_unit']) ? $_POST['electric_unit'] : "";
+//        $electric_unitprice = isset($_POST['electric_unitprice']) ? $_POST['electric_unitprice'] : "";
         $electric_cost = isset($_POST['electric_cost']) ? $_POST['electric_cost'] : "";
         
         
@@ -35,7 +35,8 @@
         $bill_date=convertToEngYear(date("Y")).date("-m-d");
         
         $check_bill_table_sql="SELECT * FROM bill_table where ROOM_NO = '$room_no' and BILL_MONTH = '$bill_month' and BILL_YEAR = '$bill_year'";
-        $check_bill_expense_sql="SELECT * FROM bill_expense where ROOM_NO = '$room_no' and BILL_MONTH = '$bill_month' and BILL_YEAR = '$bill_year'";
+        $check_water_sql="SELECT * FROM billing_expense where ROOM_NO = '$room_no' and BILL_MONTH = '$bill_month' and BILL_YEAR = '$bill_year' and expense_id='0201'";
+        $check_electric_sql="SELECT * FROM billing_expense where ROOM_NO = '$room_no' and BILL_MONTH = '$bill_month' and BILL_YEAR = '$bill_year' and expense_id='0301'";
 
         $insert_bill_table_sql=<<<EOF
         INSERT INTO bill_table
@@ -43,12 +44,12 @@
         VALUES('$room_no','$bill_year','$bill_month','$bill_date',$wmeter_before,$wmeter_current,$water_cost,$emeter_before,$emeter_current,$electric_cost,$other_cost,$room_cost);
         EOF;
         $insert_water_sql=<<<EOF
-        INSERT INTO bill_expense
+        INSERT INTO billing_expense
         (`room_no`,`expense_id`,`bill_year`,`bill_month`,`bill_date`,`old_unit`,`new_unit`)
         VALUES('$room_no','0201','$bill_year','$bill_month','$bill_date',$wmeter_before,$wmeter_current);
         EOF;
         $insert_electric_sql=<<<EOF
-        INSERT INTO bill_expense
+        INSERT INTO billing_expense
         (`room_no`,`expense_id`,`bill_year`,`bill_month`,`bill_date`,`old_unit`,`new_unit`)
         VALUES('$room_no','0301','$bill_year','$bill_month','$bill_date',$emeter_before,$emeter_current);
         EOF;
@@ -82,12 +83,6 @@
         EOF;
         
         
-        
-        
-        
-        
-        
-        
         $conn = new mysqli($servername, $username, $password, $dbname);
         if ($conn->connect_error) {
             die("Connection failed: " . $conn->connect_error);
@@ -103,25 +98,72 @@
             $existing_bill_table = false;
         }
         
+        $stmt = $conn->prepare($check_water_sql);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $existing_water = true;
+        } else {
+            $existing_water = false;
+        }
+        
+        $stmt = $conn->prepare($check_electric_sql);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $existing_electrice = true;
+        } else {
+            $existing_electrice = false;
+        }
 
         
         echo "<br><div class='center'>";
         echo "Bill processing room no. $room_no for month $bill_month $bill_year";
-        echo "<br>x records is inserted to database";
+        echo "<br>";
         if($existing_bill_table){
-        
-            
-            echo "<br>Record found<br>$update_bill_table_sql";
-            echo "<br>$update_water_sql";
-            echo "<br>$update_electric_sql";
-            echo "<br>$total";
+            $stmt = $conn->prepare($update_bill_table_sql);
+            if ($stmt->execute()) {
+                echo "Bill Record updated successfully";
+            } else {
+                echo "Error: " . $update_bill_table_sql . "<br>" . $conn->error;
+            }
         }else{
-            
-            
-            echo "<br>Record not found<br>$insert_bill_table_sql";
-            echo "<br>$insert_water_sql";
-            echo "<br>$insert_electric_sql";
-            echo "<br>$total";
+            $stmt = $conn->prepare($insert_bill_table_sql);
+            if ($stmt->execute()) {
+                echo "Bill Record inserted successfully";
+            } else {
+                echo "Error: " . $insert_bill_table_sql . "<br>" . $conn->error;
+            }
+        }
+        if($existing_water){
+            $stmt = $conn->prepare($update_water_sql);
+            if ($stmt->execute()) {
+                echo "<br>Water Record updated successfully";
+            } else {
+                echo "Error: " . $update_water_sql . "<br>" . $conn->error;
+            }
+        }else{
+            $stmt = $conn->prepare($insert_water_sql);
+            if ($stmt->execute()) {
+                echo "<br>Water Record inserted successfully";
+            } else {
+                echo "Error: " . $insert_water_sql . "<br>" . $conn->error;
+            }
+        }
+        if($existing_electrice){
+            $stmt = $conn->prepare($update_electric_sql);
+            if ($stmt->execute()) {
+                echo "<br>Electric Record updated successfully";
+            } else {
+                echo "Error: " . $update_electric_sql . "<br>" . $conn->error;
+            }
+        }else{
+            $stmt = $conn->prepare($insert_electric_sql);
+            if ($stmt->execute()) {
+                echo "<br>Electric Record inserted successfully";
+            } else {
+                echo "Error: " . $insert_electric_sql . "<br>" . $conn->error;
+            }
         }
         echo "</div><br>";
         
@@ -187,7 +229,7 @@
                 <tr>
                     <td>ค่าน้ำ</td>
                     <td class="textbox_center"><input type="number" id="wmeter_before" name="wmeter_before" readonly tabindex="-1"></td>
-                    <td class="textbox_center"><input type="number" id="wmeter_current" name="wmeter_current" oninput="calculateWaterCost()" required></td>
+                    <td class="textbox_center"><input type="number" id="wmeter_current" name="wmeter_current" onblur="calculateWaterCost()" required></td>
                     <td class="textbox_center"><input type="text" id="water_unit" size="10" name="water_unit" tabindex="-1" readonly></td>
                     <td class="textbox_center"><input type="number" id="water_unitprice" size="10" name="water_unitprice" tabindex="-1" readonly value="<?php echo getExpenseRate("0201");?>"></td>
                     <td class="textbox_center"><input type="text" id="water_cost" size="10" name="water_cost" tabindex="-1" readonly></td>
@@ -195,7 +237,7 @@
                 <tr>            
                     <td>ค่าไฟ</td>        
                 	<td class="textbox_center"><input type="number" id="emeter_before" name="emeter_before" tabindex="-1" readonly></td>
-                    <td class="textbox_center"><input type="number" id="emeter_current" name="emeter_current" oninput="calculateElectricCost()" required></td>
+                    <td class="textbox_center"><input type="number" id="emeter_current" name="emeter_current" onblur="calculateElectricCost()" required></td>
                     <td class="textbox_center"><input type="text" id="electric_unit" size="10" name="electric_unit" tabindex="-1" readonly></td>
                     <td class="textbox_center"><input type="number" id="electric_unitprice" size="10" name="electric_unitprice" tabindex="-1" readonly value="<?php echo getExpenseRate("0301");?>"></td>
                     <td class="textbox_center"><input type="text" id="electric_cost" size="10" name="electric_cost" tabindex="-1" readonly></td>
@@ -297,6 +339,34 @@
                       	document.getElementById("room_cost").value = "0";
                         document.getElementById("wmeter_before").value = "0";
                         document.getElementById("emeter_before").value = "0";
+                        
+                    }
+                });
+            }
+            var bill_month = document.getElementById("bill_month").value;
+            var bill_year = document.getElementById("bill_year").value;
+            if (bill_month&&bill_year) {
+                $.ajax({
+                    url: 'checkmeter.php',
+                    type: 'POST',
+                    data: { 
+                    	inputText: inputText,
+                    	bill_year: bill_year,
+                    	bill_month: bill_month
+                     },
+                    success: function(response) {
+	                    response = JSON.parse(response);
+                        document.getElementById("wmeter_current").value = response[0] || "";
+                        document.getElementById("emeter_current").value = response[1] || "";
+                        document.getElementById("wmeter_before").value = response[2] || "";
+                        document.getElementById("emeter_before").value = response[3] || "";
+        				console.log(response);
+                    },
+                    error: function() {
+                        document.getElementById("wmeter_current").value = "";
+                        document.getElementById("emeter_current").value = "";
+                        document.getElementById("wmeter_before").value = "";
+                        document.getElementById("emeter_before").value = "";
                         
                     }
                 });

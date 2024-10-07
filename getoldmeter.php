@@ -46,9 +46,9 @@
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
         $results = [
-            $valuegr ?? "No result",
-            (string)$row["wmeter"] ?? "No result",
-            (string)$row["emeter"] ?? "No result"
+            $valuegr ?? "0",
+            (string)$row["wmeter"] ?? "0",
+            (string)$row["emeter"] ?? "0"
         ];
         echo json_encode($results);
     } else {

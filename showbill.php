@@ -13,8 +13,7 @@
     $sql="SELECT * FROM rasikawa_apartment.bill_table where bill_year='".$input_year."' and bill_month='".$input_month."' order by room_no;";
     
     echo "<br><div class='center'>";
-    echo "Bill for $input_month $input_year";
-    echo "SQL: $sql";
+    echo "Apartment invoice for ".monthToText($input_month)." ".convertToThaiYear($input_year);
     echo "</div><br>";
     $conn = new mysqli($servername, $username, $password, $dbname);
     if ($conn->connect_error) {
