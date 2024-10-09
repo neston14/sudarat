@@ -54,7 +54,7 @@
                     		}
                     ?>
                     </SELECT>
-            		<input formaction="showbill.php" type="submit" value="Show Bill">
+            		<input class="btn" formaction="showbill.php" type="submit" value="Show Bill">
             	</td>
         	</tr>
         	<tr><td colspan="2">&nbsp;</td></tr>
@@ -108,7 +108,7 @@
                 </tr> 
                 <tr>
                     <td colspan="9" align="right">&nbsp;</td>
-                    <td class="textbox_center"><input type="submit" value="Print A5"></td>
+                    <td id="action" class="textbox_center"><input type="submit" value="Print A5">&nbsp;<input type="submit" value="Summmary"></td>
                 </tr> 
                 <tr>
                     <td colspan="10" align="right">&nbsp;</td>

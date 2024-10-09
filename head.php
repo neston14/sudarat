@@ -63,7 +63,27 @@
           background-color: rgba(0, 0, 0, 0.1);
         }
         
+        .btn {
+        cursor: pointer;
+        border: solid rgb(187, 204, 0);
+        font-size: 12px;
+        color: rgb(255, 255, 255);
+        padding: 0px 0px;
+        transition: 2s;
+        width: 100px;
+        height: 30px;
+        box-shadow: rgb(0, 0, 0) 0px 0px 0px 0px;
+        background: linear-gradient(90deg, rgb(0, 102, 204) 0%, rgb(197, 0, 204) 100%);
+        }
         
+        .btn:hover{
+        color: rgb(255, 255, 255);
+        width: 100px;
+        height: 30px;
+        background: rgb(0, 102, 204) none repeat scroll 0% 0% / auto padding-box border-box;
+        border-color: rgb(204, 0, 105);
+        border-style: solid;
+        }   
                     
         .center {
           text-align: center;
